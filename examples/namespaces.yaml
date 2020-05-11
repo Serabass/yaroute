@@ -1,0 +1,2 @@
+/ as api-group @ Api:
+  GET /new as .new: MyController@newEntry

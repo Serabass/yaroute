@@ -1,0 +1,5 @@
+~any: '.+'
+
+GET /entity/{id ~numeric} as entity : EntityController@show
+GET /post/{alias ~alias} as post    : PostController@show
+GET /redirect/{url ~any} as post    : RedirectController@go
