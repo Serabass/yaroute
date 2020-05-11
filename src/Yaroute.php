@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @link Specification of YAML 1.2 http://www.yaml.org/spec/1.2/spec.html
  * @link Route caching in Laravel core https://github.com/laravel/framework/blob/5.6/src/Illuminate/Foundation/Support/Providers/RouteServiceProvider.php#L30-L39
@@ -22,10 +23,10 @@ class Yaroute
      * @example GET /logout uses auth
      */
     const FULL_REGEX =
-        '%^(?:(?P<method>[\w|]+)\s+)'.
-        '(?P<path>/.*?)'.
-        '(?:\s+as\s+(?P<name>[\w.-]+?))?'.
-        '(?:\s+uses\s+(?P<middleware>[\w;:\s]+))?'.
+        '%^(?:(?P<method>[\w|]+)\s+)' .
+        '(?P<path>/.*?)' .
+        '(?:\s+as\s+(?P<name>[\w.-]+?))?' .
+        '(?:\s+uses\s+(?P<middleware>[\w;:\s]+))?' .
         '$%sim';
 
     /**
@@ -47,10 +48,10 @@ class Yaroute
      * @example /login uses guest
      */
     const GROUP_REGEX =
-        '%^(?P<prefix>/.*?)'.
-        '(?:\s+as\s+(?P<name>[\w.-]+?))?'.
-        '(?:\s+uses\s+(?P<middleware>[\w;:\s]+))?'.
-        '(?:\s+@\s+(?P<namespace>[\w;:\s]+))?'.
+        '%^(?P<prefix>/.*?)' .
+        '(?:\s+as\s+(?P<name>[\w.-]+?))?' .
+        '(?:\s+uses\s+(?P<middleware>[\w;:\s]+))?' .
+        '(?:\s+@\s+(?P<namespace>[\w;:\s]+))?' .
         '$%sim';
 
     /**
@@ -62,7 +63,7 @@ class Yaroute
      * @example {path ~ .+}
      */
     const PARAM_REGEX =
-        '/\{(?P<param>[\w?]+)'.
+        '/\{(?P<param>[\w?]+)' .
         '(?:\s+~(?P<regex>\s*.+?))?\}/sim';
 
     /**
@@ -89,18 +90,20 @@ class Yaroute
     ];
 
     /**
-     * @param         $file
-     * @param Yaroute $yaml
+     * @param string $file A file name.
+     * @param self   $yaml Self object for recursive operations.
      *
      * @throws IncorrectDataException
      * @throws RegExpAliasAlreadySetException
      *
      * @return Yaroute
      */
-    public static function registerFile($file, self $yaml = null)
+    public static function registerFile(string $file, self $yaml = null)
     {
-        if (app()->routesAreCached()) {
-            return;
+        if (app() instanceof \Illuminate\Foundation\Application) {
+            if (app()->routesAreCached()) {
+                return;
+            }
         }
 
         $yaml = !is_null($yaml) ? $yaml : new self();
@@ -293,7 +296,7 @@ class Yaroute
                 }
             }
 
-            return '{'.$param.'}';
+            return '{' . $param . '}';
         }, $url);
 
         return [
@@ -305,7 +308,7 @@ class Yaroute
     /**
      * @param array $arr
      *
-     * @return bool
+     * @return boolean
      */
     private function isAssoc(array $arr)
     {
@@ -337,7 +340,7 @@ class Yaroute
     private function prepareFileName($string)
     {
         if (!Str::endsWith($string, '.yaml')) {
-            return $string.'.yaml';
+            return $string . '.yaml';
         }
 
         return $string;
@@ -377,7 +380,7 @@ class Yaroute
             $file = $matches['file'];
 
             $dir = dirname($this->yamlPath);
-            self::registerFile($dir.'/'.$file, $this);
+            self::registerFile($dir . '/' . $file, $this);
         }
     }
 
@@ -387,7 +390,7 @@ class Yaroute
      * @throws IncorrectDataException
      * @throws RegExpAliasAlreadySetException
      *
-     * @return bool
+     * @return boolean
      */
     public function register($data): bool
     {
@@ -486,7 +489,7 @@ class Yaroute
                     /**
                      * @var Route
                      */
-                    $route = Route::$method($urlMatches['path'], $controller.'@'.$action);
+                    $route = Route::$method($urlMatches['path'], $controller . '@' . $action);
                     if (isset($urlMatches['name'])) {
                         $route->name($urlMatches['name']);
                     }
@@ -534,7 +537,7 @@ class Yaroute
         $result = [];
 
         foreach ($methods as $method) {
-            $data = $routes->get($method);
+            $data = $routes[$method . '/'];
 
             foreach ($data as $url => $options) {
                 if (!isset($options->action['controller'])) {
@@ -552,7 +555,7 @@ class Yaroute
                     $param = $m['param'];
 
                     if (isset($where[$param])) {
-                        return '{'.$param.' ~ '.$where[$param].'}';
+                        return '{' . $param . ' ~ ' . $where[$param] . '}';
                     }
 
                     return $m[0];
@@ -560,11 +563,11 @@ class Yaroute
 
                 if (isset($options->action['as'])) {
                     $as = $options->action['as'];
-                    $uri = $uri." as $as";
+                    $uri = $uri . " as $as";
                 }
 
                 if (!Str::startsWith($url, '/')) {
-                    $uri = '/'.$uri;
+                    $uri = '/' . $uri;
                 }
 
                 $row = "$method ${uri}: $controller";
